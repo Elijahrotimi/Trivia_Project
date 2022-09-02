@@ -1,4 +1,5 @@
 import os
+from unicodedata import category
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -7,6 +8,15 @@ import random
 from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
+def paginate_questions(request, selection):
+    page = request.args.get("page", 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
+
+    books = [book.format() for book in selection]
+    current_books = books[start:end]
+
+    return current_books
 
 def create_app(test_config=None):
     # create and configure the app
@@ -16,17 +26,39 @@ def create_app(test_config=None):
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     """
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     """
     @TODO: Use the after_request decorator to set Access-Control-Allow
     """
+    @app.after_request
+    def after_request(response):
+        response.headers.add(
+            "Access-Control-Allow-Headers", "Content-Type,Authorization,true"
+        )
+        response.headers.add(
+            "Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS"
+        )
+        return response
 
     """
     @TODO:
     Create an endpoint to handle GET requests
     for all available categories.
     """
-
+    @app.route('/categories', methods=['GET'])
+    def get_categories():
+        categories = {}
+        try:
+            selection = Category.query.order_by(Category.id).all()
+            for category in selection:
+                categories[category.id] = category.type
+            return jsonify({
+                'success': True,
+                'categories': categories,
+            })
+        except:
+            abort(405)
 
     """
     @TODO:
@@ -40,6 +72,32 @@ def create_app(test_config=None):
     ten questions per page and pagination at the bottom of the screen for three pages.
     Clicking on the page numbers should update the questions.
     """
+    @app.route('/questions', methods=['GET'])
+    def get_questions():
+        categories = {}
+        current_category = []
+        try:
+            questions = Question.query.order_by(Question.category).all()
+            current_questions = paginate_questions(request, questions)
+
+            selection = Question.query(Question.category).order_by(Question.category).all()
+            for category in selection:
+                for list in category:
+                    current_category.append(list)
+            
+            cat = Category.query.order_by(Category.id).all()
+            for category in cat:
+                categories[category.id] = category.type
+            return jsonify({
+                'success': True,
+                'questions': current_questions,
+                'total_questions': len(Question.query.all()),
+                'categories': categories,
+                'current_category': current_category
+            })
+
+        except:
+            abort(405)
 
     """
     @TODO:
@@ -48,6 +106,16 @@ def create_app(test_config=None):
     TEST: When you click the trash icon next to a question, the question will be removed.
     This removal will persist in the database and when you refresh the page.
     """
+    @app.route('/questions/<int:id>', methods=['DELETE'])
+    def delete_question(id):
+        try:
+            question = Question.query.get(id)
+            question.delete()
+            return jsonify({
+                'success': True,
+            })
+        except:
+            abort(422)
 
     """
     @TODO:
