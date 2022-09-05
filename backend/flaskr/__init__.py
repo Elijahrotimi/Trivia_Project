@@ -82,7 +82,7 @@ def create_app(test_config=None):
             questions = Question.query.order_by(Question.category).all()
             current_questions = paginate_questions(request, questions)
 
-            selection = Question.query(Question.category).order_by(Question.category).all()
+            selection = Question.query.with_entities(Question.category).order_by(Question.category).all()
             for category in selection:
                 for list in category:
                     current_category.append(list)
@@ -170,23 +170,28 @@ def create_app(test_config=None):
     app.route('/questions/search', methods=['POST'])
     def search_questions():
         body = request.get_json()
-        search_term = body.get ('searchTerm', None)
+        search_term = body.get('searchTerm', None)
+        current_category = []
 
         try:
-            questions = Question.query.filter(Question.question.ilike('%' + search_term + '%')).all()
-            current_questions = paginate_questions(request, questions)
-            categories = Category.query.order_by(Category.id).all()
-            category_items = [(category.id, category.type) for category in categories]
-
+            selection = Question.query.filter(Question.question.ilike('%' + search_term + '%')).all()
+            current_questions = paginate_questions(request, selection)
+            categories = Question.query.with_entities(Question.category).order_by(Question.category).filter(Question.question.ilike('%' + search_term + '%')).all()
+            for category in categories:
+                for list in category:
+                    current_category.append(list)
+            
             if len(current_questions) == 0:
                 abort(404)
+
             return jsonify({
-                'success': True,
-                'questions': current_questions, 
-                'total_questions': len(questions)
+              'success': True,
+              'questions': current_questions,
+              'current_category': current_category,
+              'total_questions': len(selection)
             })
 
-        except:
+        except Exception:
             abort(400)
     """
     @TODO:
