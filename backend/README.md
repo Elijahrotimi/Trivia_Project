@@ -102,3 +102,228 @@ createdb trivia_test
 psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
+
+### Endpoints Documentation
+
+`GET '/categories'`
+- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
+- Request Arguments: None
+- Returns: A multiple key/value pairs object with the following structure:
+    - `success`: can take values `True` or `False`.
+    - `categories`: dictionary of categories gotten from the database.
+
+Example of return object:
+
+```JSON
+{
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  },
+  "success": true,
+}
+
+```
+
+`GET '/questions'`
+- Fetches a dictionary of questions.
+- Request Arguments: Page's number (optional)
+- Returns: A multiple key/value pairs object with the following structure:
+    - `success`: can take values `True` or `False`.
+    - `questions`: contains a list of the fetched questions.
+    - `total_questions`: the number of questions returned.
+    - `categories`: dictionary of categories gotten from the database.
+    - `current_category`: list of the categories of the returned questions list.
+
+Example of return object:
+
+```JSON
+{
+  "categories": {
+    "1": "Science"
+  },
+  "current_category": [
+    1
+  ],
+  "questions": [
+    {
+      "answer": "The Liver",
+      "category": 1,
+      "difficulty": 4,
+      "id": 20,
+      "question": "What is the heaviest organ in the human body?"
+    },
+    {...}
+  ],
+  "success": true,
+  "total_questions": 5
+}
+```
+
+`DELETE '/questions/<int:question_id>'`
+- Deletes the question selected by `question_id`.
+- Request Arguments: `question_id` (required)
+- Returns: A key/value pair object with the following structure:
+    - `success`: can take values `True` or `False`.
+
+Example of return object:
+
+```JSON
+{
+  "success": true
+}
+```
+
+`POST '/questions'`
+- Inserts a new question in the database.
+- Request Arguments: a key/value pairs object whit the following content:
+    - `question`: string containing the question itself.
+    - `answer`: answer's string.
+    - `category`: category ID field.
+    - `difficulty`: difficulty level.
+
+Example of the object:
+
+```JSON
+{
+    answer: "Thomas Edison"
+    category: 1
+    difficulty: 3
+    question: "Who invented the lightbulb?"
+}
+```
+
+- Returns: A multiple key/value pairs object with the following structure:
+    - `success`: can take values `True` or `False`.
+    - `created`: Returns the value of the newly created question.id,
+    - `questions`: contains a list of the fetched questions.
+    - `total_questions`: the number of questions returned.
+
+
+Example of return object:
+
+```JSON
+{
+  "questions": [
+    {
+      "answer": "Thomas Edison",
+      "category": 1,
+      "difficulty": 3,
+      "id": 12,
+      "question": "Who invented the lightbulb?"
+    },
+    {...}
+  ],
+  "success": true,
+  "created": 3
+  "total_questions": 17
+}
+```
+
+`POST '/questions_search'`
+- Returns a set of questions based on a search term.
+- Request Arguments:
+    - `searchTerm`: string to search in questions string.
+- Returns: A multiple key/value pairs object with the following structure:
+    - `success`: can take values `True` or `False`.
+    - `questions`: contains a list of the fetched questions.
+    - `total_questions`: the number of questions returned.
+    - `current_category`: category ID field.
+
+Example of return object:
+
+```JSON
+{
+  "questions": [
+    {
+      "answer": "Brazil",
+      "category": 5,
+      "difficulty": 4,
+      "id": 4,
+      "question": "Which is the only team to play in every soccer World Cup tournament?"
+    }
+  ],
+  "success": true,
+  "total_questions": 1,
+  "current_category": 4
+}
+
+```
+
+`GET '/categories/<int:category_id>/questions'`
+- Returns a subset of questions that belong to a specific category.
+- Request Arguments:
+    - `category_id`: category id field.
+- Returns: A multiple key/value pairs object with the following structure:
+    - `success`: can take values `True` or `False`.
+    - `questions`: contains a list of the fetched questions.
+    - `total_questions`: the number of questions returned.
+
+Example of return object:
+```JSON
+{
+  "questions": [
+    {
+      "answer": "It depends",
+      "category": 1,
+      "difficulty": 1,
+      "id": 77,
+      "question": "Can birds fly?"
+    },
+    {
+      "answer": "Brazil",
+      "category": 3,
+      "difficulty": 4,
+      "id": 2,
+      "question": "Which is the only team to play in every soccer World Cup tournament?"
+    },
+    {...}
+  ],
+  "success": true,
+  "total_questions": 4
+}
+```
+
+
+`POST '/quizzes'`
+- Gets random questions for player.
+- Request Arguments:
+    - `category_id`: question's category id field.
+    - `previous_quesion`: question in the previous iteration, first time it's an empty string.
+- Returns: A multiple key/value pairs object with the following content:
+    - `success`: can take values `True` or `False`.
+    - `question`: contains the question.
+
+Example of return object:
+```JSON
+{
+  "success": true,
+  "question": {
+    "answer": "Alexander Fleming",
+    "category": 1,
+    "difficulty": 3,
+    "id": 16,
+    "question": "Who discovered penicillin?"
+  }
+}
+```
+
+## Errors handling:
+Endpoints are written for error handlers. They return key/value pairs as follows:
+- `success`: False.
+- `error`: error code_number.
+- `message`: description of error.
+
+Example of return object:
+
+```JSON
+{
+    "success": False,
+    "error": 404,
+    "message": "Resource Not Found"
+}
+```
